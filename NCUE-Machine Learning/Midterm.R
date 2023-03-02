@@ -1,9 +1,9 @@
 AvaData=read.csv("Car_Purchasing_data.csv",header=T,row.names = NULL)
 AvaN=nrow(AvaData)
-AvaData$Gender=as.factor(AvaData$Gender)#±N©Ê§OÂà¬°Ãþ§OÅÜ¼Æ¡A0¨k1¤k
+AvaData$Gender=as.factor(AvaData$Gender)#å°‡æ€§åˆ¥è½‰ç‚ºé¡žåˆ¥è®Šæ•¸ï¼Œ0ç”·1å¥³
 
 #Validation set approach
-#80%¸ê®Æ§@¬°training set/20%§@¬°validation set
+#80%è³‡æ–™ä½œç‚ºtraining set/20%ä½œç‚ºvalidation set
 TrainN=nrow(AvaData)*0.8
 set.seed(1)
 TrainInx=sample(c(1:AvaN),TrainN)
@@ -11,21 +11,21 @@ ValInx=c(1:AvaN)[-TrainInx]
 TrainData=AvaData[TrainInx,]
 ValData=AvaData[ValInx,]
 
-#¥Îtraining set«Øºc°jÂk¼Ò«¬
+#ç”¨training setå»ºæ§‹è¿´æ­¸æ¨¡åž‹
 library(leaps)
 BestSubModel=regsubsets(Car_Purchase_Amount~., data=TrainData, nvmax=5)
 summary(BestSubModel)
-#¥Ñvalidation set¤À§O­pºâd=1,2,...,5³Ì¨Î¼Ò«¬ªºvalidation MSE
+#ç”±validation setåˆ†åˆ¥è¨ˆç®—d=1,2,...,5æœ€ä½³æ¨¡åž‹çš„validation MSE
 ValDataM=model.matrix(Car_Purchase_Amount~., data=ValData)
 ValMSE=rep(NA,5)
 for(d in 1:5){
   coef.d<-coef(BestSubModel,d)
   predY<-ValDataM[,names(coef.d)]%*%coef.d
   ValMSE[d]<-mean((ValData$Car_Purchase_Amount-predY)^2)}
-#§ä¥XMSE³Ì¤pªÌ¡A¬D¿ï³Ì¾A¦Xªºp
+#æ‰¾å‡ºMSEæœ€å°è€…ï¼ŒæŒ‘é¸æœ€é©åˆçš„p
 BestD=which.min(ValMSE)
 BestD
-#¥ÑAvailable set«Øºc°jÂk¼Ò«¬
+#ç”±Available setå»ºæ§‹è¿´æ­¸æ¨¡åž‹
 BestModel=regsubsets(Car_Purchase_Amount~., data=AvaData,nvmax=7)
 coef(BestModel, BestD)
 RegModel.F=lm(Car_Purchase_Amount~Gender+Age+Annual_Salary+
@@ -34,12 +34,12 @@ RegModel.F=lm(Car_Purchase_Amount~Gender+Age+Annual_Salary+
 
 #Create 10-Fold
 library(caret)
-FoldK=10#³]©wK=10
+FoldK=10#è¨­å®šK=10
 ValMSE_K=matrix(NA,FoldK,5)
 set.seed(1)
 CFold=createFolds(c(1:AvaN),k=FoldK,returnTrain=T)
-#¥Ñtraining set«Øºc°jÂk¼Ò«¬
-#¥Ñvalidation set­pºâd=1,2..,5¼Ò«¬ªºvalidation MSE
+#ç”±training setå»ºæ§‹è¿´æ­¸æ¨¡åž‹
+#ç”±validation setè¨ˆç®—d=1,2..,5æ¨¡åž‹çš„validation MSE
 for(j in 1:FoldK){
   TrainInxTemp=CFold[[j]]
   ValInxTemp=c(1:AvaN)[-TrainInxTemp]
@@ -54,17 +54,17 @@ for(j in 1:FoldK){
   }
 }
 ValMSE_K
-#¥Î10 foldsªºMSE¥­§¡§@¬°validation MSE
+#ç”¨10 foldsçš„MSEå¹³å‡ä½œç‚ºvalidation MSE
 MeanD=colMeans(ValMSE_K)
 SDD=apply((ValMSE_K),FUN=sd, MARGIN=2)
-#¥ÑValidation MSE³Ì¤pªÌ¬D¥X³Ì¾A¦Xªºd
+#ç”±Validation MSEæœ€å°è€…æŒ‘å‡ºæœ€é©åˆçš„d
 summary(BestSubModel_K)
 BestD_K=which.min(colMeans(ValMSE_K))
 BestModel_K=regsubsets(Car_Purchase_Amount~., data=AvaData, nvmax=5)
 coef(BestModel_K, BestD_K)
 RegModel_K.F=lm(Car_Purchase_Amount~Age+Annual_Salary+Net_Worth,data=AvaData)
 
-#¼Ò«¬·Ç½Tµ{«×
+#æ¨¡åž‹æº–ç¢ºç¨‹åº¦
 plot(predict(RegModel_K.F), AvaData$Car_Purchase_Amount
      ,xlab="Predicted values",ylab = "Actual values",pch=20)
 abline(a = 0,b = 1,col = "red",lwd = 2)
@@ -76,14 +76,14 @@ library(car)
 durbinWatsonTest(RegModel_K.F)
 ncvTest(RegModel_K.F)
 
-#¥Ñ¹Ï§ÎÀË¬doutlier/influential point/high leverage point
+#ç”±åœ–å½¢æª¢æŸ¥outlier/influential point/high leverage point
 
 influencePlot(RegModel_K.F)
 leveragePlots(RegModel_K.F)
 influenceIndexPlot(RegModel_K.F)
 outlierTest(RegModel_K.F)
 
-vif(RegModel_K.F)#ÀË¬d°jÂkªºcollinearity
+vif(RegModel_K.F)#æª¢æŸ¥è¿´æ­¸çš„collinearity
 
 
 
