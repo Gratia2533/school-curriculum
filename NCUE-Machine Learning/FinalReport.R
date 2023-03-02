@@ -1,6 +1,6 @@
 library(class);library(caret);library(pROC);library(e1071);library(nnet)
 library(sampling); library(dplyr); library(tree);library(randomForest)
-#¸ü¤J¸ê®Æ¡B¸ê®Æ«¬ºA³]©w----
+#è¼‰å…¥è³‡æ–™ã€è³‡æ–™å‹æ…‹è¨­å®š----
 AllData=read.csv("diabetes.csv",header=T)
 AllData$class=as.factor(AllData$class)
 AllData$Obesity=as.factor(AllData$Obesity)
@@ -19,7 +19,7 @@ AllData$Polydipsia=as.factor(AllData$Polydipsia)
 AllData$Polyuria=as.factor(AllData$Polyuria)
 AllData$Gender=as.factor(AllData$Gender)
 AllN=nrow(AllData)
-#©Ò¦³¸ê®Æªº10%·í§@testing set¡A³Ñ¤Uªº90%·í¦¨available set
+#æ‰€æœ‰è³‡æ–™çš„10%ç•¶ä½œtesting setï¼Œå‰©ä¸‹çš„90%ç•¶æˆavailable set
 contrasts(AllData$class)
 GN.test=round(table(AllData$class)*0.1,0)
 set.seed(3)
@@ -30,12 +30,12 @@ AvaInx=c(1:AllN)[-TestInx]
 AvaData=AllData[AvaInx,]
 
 ##Classification tree----
-#¥Ñavailable set«Øºcclassification tree¨Ãµe¥X
+#ç”±available setå»ºæ§‹classification treeä¸¦ç•«å‡º
 ModelTree=tree(class~., data=AvaData)
 ModelTree
 win.graph();plot(ModelTree);text(ModelTree)
-#¥Ñ10-fold CVµe¥Xtree size vs.¼Ò«¬error rateªºÃö«Y¨Ó§PÂ_¬O§_prune tree
-#¦³³Ì¤perror rateªº¼Ò«¬¡A¬°³Ì¾Atree size
+#ç”±10-fold CVç•«å‡ºtree size vs.æ¨¡å‹error rateçš„é—œä¿‚ä¾†åˆ¤æ–·æ˜¯å¦prune tree
+#æœ‰æœ€å°error rateçš„æ¨¡å‹ï¼Œç‚ºæœ€é©tree size
 set.seed(5)
 ModelTreeCV=cv.tree(ModelTree, FUN=prune.misclass)
 win.graph()
@@ -43,23 +43,23 @@ plot(ModelTreeCV$size, ModelTreeCV$dev,type="b")
 
 ModelTreeCV$size;ModelTreeCV$dev
 
-#¬D¿ï³Ì¾Atree size­×°Å¾ğ¨Ãµe¥X
+#æŒ‘é¸æœ€é©tree sizeä¿®å‰ªæ¨¹ä¸¦ç•«å‡º
 ModelPruneTree=prune.tree(ModelTree,best=5)
 win.graph()
 plot(ModelPruneTree)
 text(ModelPruneTree)
 
-#±Ntesting data±a¤J­×°Å«áªº¾ğ¡A±o¨ìY¹w´ú­È­pºâAccuracy
+#å°‡testing dataå¸¶å…¥ä¿®å‰ªå¾Œçš„æ¨¹ï¼Œå¾—åˆ°Yé æ¸¬å€¼è¨ˆç®—Accuracy
 PredProbY=predict(ModelPruneTree,TestData[,-17])
 PredY=as.factor(ifelse(as.data.frame(PredProbY)$Positive>0.5,"Positive","Negative"))
 confusionMatrix(PredY, TestData$class, positive='Positive' )
-#µeROC curve & ­pºâAUC
+#ç•«ROC curve & è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(PredY), print.auc=TRUE)
 
 
 ##Logistic+validation set approach----
-#80%training set¡B20#validation set
+#80%training setã€20#validation set
 GN.train=round(table(AvaData$class)*0.8,0)
 set.seed(5)
 Trainget=strata(AvaData,"class",size=c(GN.train[[1]],GN.train[[2]]),method="srswr")
@@ -72,7 +72,7 @@ ValData=AvaData[ValInx,]
 #Model 1 Full model
 ModelLog1=glm(formula=class~.,family=binomial,data=TrainData)
 PreProb1=predict(ModelLog1, newdata=ValData[,-17],type="response")
-PredY1=as.factor(ifelse(PreProb1>0.5, "Positive", "Negative"))#¾÷²v¤j©ó0.5³Q¤À¨ìSO§_«hR
+PredY1=as.factor(ifelse(PreProb1>0.5, "Positive", "Negative"))#æ©Ÿç‡å¤§æ–¼0.5è¢«åˆ†åˆ°SOå¦å‰‡R
 confusionMatrix(PredY1, ValData$class)
 win.graph()
 plot.roc(as.numeric(ValData$class),as.numeric(PredY1),print.auc=TRUE)
@@ -101,19 +101,19 @@ PreProb5=predict(ModelLog5, newdata=ValData[,-17],type="response")
 PredY5=as.factor(ifelse(PreProb5>0.5, "Positive", "Negative"))
 confusionMatrix(PredY5, ValData$class)
 auc(roc(as.numeric(ValData$class),as.numeric(PredY5)))
-#§ä¥X³Ì¾A¼Ò«¬(¥Haccuracy¬°·Ç«h)
+#æ‰¾å‡ºæœ€é©æ¨¡å‹(ä»¥accuracyç‚ºæº–å‰‡)
 Accu=rep(NA,5)
 Accu[1]=confusionMatrix(PredY1,ValData$class)$overall["Accuracy"]
 Accu[2]=confusionMatrix(PredY2,ValData$class)$overall["Accuracy"]
 Accu[3]=confusionMatrix(PredY3,ValData$class)$overall["Accuracy"]
 Accu[4]=confusionMatrix(PredY4,ValData$class)$overall["Accuracy"]
 Accu[5]=confusionMatrix(PredY5,ValData$class)$overall["Accuracy"]
-which.max(Accu)#©Ò¦³model¤¤validation accuracy³Ì¤jªº¬°³Ì¾A¼Ò«¬#1³Ì¤j
+which.max(Accu)#æ‰€æœ‰modelä¸­validation accuracyæœ€å¤§çš„ç‚ºæœ€é©æ¨¡å‹#1æœ€å¤§
 
-#¥Havailabla set«Øºc³Ì¾A¼Ò«¬
+#ä»¥availabla setå»ºæ§‹æœ€é©æ¨¡å‹
 FinalModel=glm(formula=class~.,family=binomial,data=AvaData)
 summary(FinalModel)
-#­pºâtesting setªºµ²ªG
+#è¨ˆç®—testing setçš„çµæœ
 TestPreProb=predict(FinalModel, newdata=TestData[,-17], type="response")
 TestPredY=as.factor(ifelse(TestPreProb>0.5, "Positive", "Negative"))
 confusionMatrix(TestPredY, TestData$class, positive='Positive')
@@ -121,19 +121,19 @@ win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(TestPredY),print.auc=TRUE)
 auc(roc(as.numeric(TestData$class),as.numeric(TestPredY)))
 
-#§ä¥X³Ì¾A¼Ò«¬(¥HAUC¬°·Ç«h)
+#æ‰¾å‡ºæœ€é©æ¨¡å‹(ä»¥AUCç‚ºæº–å‰‡)
 AUC=rep(NA,5)
 AUC[1]=auc(roc(as.numeric(ValData$class),as.numeric(PredY1)))
 AUC[2]=auc(roc(as.numeric(ValData$class),as.numeric(PredY2)))
 AUC[3]=auc(roc(as.numeric(ValData$class),as.numeric(PredY3)))
 AUC[4]=auc(roc(as.numeric(ValData$class),as.numeric(PredY4)))
 AUC[5]=auc(roc(as.numeric(ValData$class),as.numeric(PredY5)))
-which.max(AUC)#©Ò¦³model¤¤validation AUC³Ì¤jªº¬°³Ì¾A¼Ò«¬
+which.max(AUC)#æ‰€æœ‰modelä¸­validation AUCæœ€å¤§çš„ç‚ºæœ€é©æ¨¡å‹
 
-#¥Havailabla set«Øºc³Ì¾A¼Ò«¬
+#ä»¥availabla setå»ºæ§‹æœ€é©æ¨¡å‹
 FinalModel=glm(formula=class~.,family=binomial,data=AvaData)
 summary(FinalModel)
-#­pºâtesting setªºµ²ªG
+#è¨ˆç®—testing setçš„çµæœ
 TestPreProb=predict(FinalModel, newdata=TestData[,-17], type="response")
 TestPredY=as.factor(ifelse(TestPreProb>0.5, "Positive", "Negative"))
 confusionMatrix(TestPredY, TestData$class, positive='Positive')
@@ -141,40 +141,40 @@ auc(roc(as.numeric(TestData$class),as.numeric(TestPredY)))
 
 
 ##Bagging----
-#¥ÑAvailable set«Øºcbagging model
+#ç”±Available setå»ºæ§‹bagging model
 set.seed(2)
 ModelBag=randomForest(class~., data=AvaData,mtry=10, importance=T)
-#Æ[¹î¦UXªº­«­n©Ê
+#è§€å¯Ÿå„Xçš„é‡è¦æ€§
 importance(ModelBag)
 varImpPlot(ModelBag)
-#¥ÑTesting setªºX±a¤Jbagging model¹w´úclass¡A¨Ã­pºâ·Ç½T²v
+#ç”±Testing setçš„Xå¸¶å…¥bagging modelé æ¸¬classï¼Œä¸¦è¨ˆç®—æº–ç¢ºç‡
 PredY=predict(ModelBag,newdata=TestData[,-17],type="response")
 confusionMatrix(PredY, TestData$class, positive='Positive' )
-#µe¥XROC curve&­pºâAUC
+#ç•«å‡ºROC curve&è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(PredY), print.auc=TRUE)
 
 ##Random forest----
-#¥Ñavailable set«Øºcrandom forest model(m=¡Ôp)
+#ç”±available setå»ºæ§‹random forest model(m=âˆšp)
 set.seed(2)
 ModelRF=randomForest(class~., data=AvaData,mtry=3, importance=T)
-#Æ[¹î¦UXªº­«­n©Ê
+#è§€å¯Ÿå„Xçš„é‡è¦æ€§
 round(importance(ModelRF),2)
 varImpPlot(ModelRF)
 
-#¥ÑTesting setªºX±a¤Jbagging model¹w´úclass¡A¨Ã­pºâ·Ç½T²v
+#ç”±Testing setçš„Xå¸¶å…¥bagging modelé æ¸¬classï¼Œä¸¦è¨ˆç®—æº–ç¢ºç‡
 PredY=predict(ModelRF,newdata=TestData[,-17],type="response")
 confusionMatrix(PredY, TestData$class, positive='Positive' )
 #Out-of-bag error Estimation
 win.graph()
 plot(ModelRF)
 
-#µe¥XROC curve&­pºâAUC
+#ç•«å‡ºROC curve&è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(PredY), print.auc=TRUE)
 
 ##Support vector machine+validation set approach----
-#Available set·í¤¤ªº80%¡A·ítraining set¡A³Ñ¤Uªº20%¬°validation set
+#Available setç•¶ä¸­çš„80%ï¼Œç•¶training setï¼Œå‰©ä¸‹çš„20%ç‚ºvalidation set
 GN.train=round(table(AvaData$class)*0.8,0)
 set.seed(5)
 Trainget=strata(AvaData,"class",size=c(GN.train[[1]],GN.train[[2]]),method="srswr")
@@ -184,53 +184,53 @@ TrainData=AvaData[TrainInx,]
 ValInx=c(1:nrow(AvaData))[-TrainInx]
 ValData=AvaData[ValInx,]
 
-#³]©w¦UºØcost(tuning parameter)ªº­È
+#è¨­å®šå„ç¨®cost(tuning parameter)çš„å€¼
 Costlist=c(0.001,0.01,0.1,1,5,10,100)
 AccuSumm=rep(0,length(Costlist))
 
-#¹ï¨C­Ótuning parameter­È¡A¥Htraining set«Øºcmodel
-#¨Ã¥Hvalidation setªºX¡A¥N¤J«Øºcªºmodel¡A±o¨ìYªº¹w´ú±¡ªp¨Ã­pºâ·Ç½T²v
+#å°æ¯å€‹tuning parameterå€¼ï¼Œä»¥training setå»ºæ§‹model
+#ä¸¦ä»¥validation setçš„Xï¼Œä»£å…¥å»ºæ§‹çš„modelï¼Œå¾—åˆ°Yçš„é æ¸¬æƒ…æ³ä¸¦è¨ˆç®—æº–ç¢ºç‡
 for(i in 1:length(Costlist)){
   svmfitTemp=svm(class~., data=TrainData,kernel="linear",cost=Costlist[i], scale=F)
   PredYTemp=predict(svmfitTemp, newdata=ValData[,-17],type="response")
   AccuSumm[i]=confusionMatrix(PredYTemp,ValData$class)$overall["Accuracy"]
 }
 
-#§äbest tuning parameter value (·Ç½T²v³Ì°ª)
+#æ‰¾best tuning parameter value (æº–ç¢ºç‡æœ€é«˜)
 BestC=which.max(AccuSumm)
-#¥Ñavailable set ©M best tuning parameter value«Øºc³Ì²×¼Ò«¬
+#ç”±available set å’Œ best tuning parameter valueå»ºæ§‹æœ€çµ‚æ¨¡å‹
 ModelLinearSVM=svm(class~., data=AvaData,kernel="linear",cost=Costlist[BestC], scale=F)
 summary(ModelLinearSVM)
 ModelLinearSVM$index
 
-#±Ntesting dataªºX±a¤Jfinalmodel¡A±o¨ìY¹w´ú­È¨Ã­pºâaccuracy
+#å°‡testing dataçš„Xå¸¶å…¥finalmodelï¼Œå¾—åˆ°Yé æ¸¬å€¼ä¸¦è¨ˆç®—accuracy
 PredY=predict(ModelLinearSVM, newdata=TestData[,-17],type="response")
 confusionMatrix(PredY, TestData$class, positive='Positive' )
-#µeROC curve & ­pºâAUC
+#ç•«ROC curve & è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(PredY),print.auc=TRUE)
 
 
 ##Support vector machine+10-Fold CV----
-#³]©w¦UºØcost(tuning parameter)ªº­È
+#è¨­å®šå„ç¨®cost(tuning parameter)çš„å€¼
 Costlist=c(0.001,0.01,0.1,1,5,10,100)
-#§Q¥Îavailable set data¡A¥Ñ10-fold CV­pºâ¦UºØtuning parameter value®Éªº·Ç½T²v
+#åˆ©ç”¨available set dataï¼Œç”±10-fold CVè¨ˆç®—å„ç¨®tuning parameter valueæ™‚çš„æº–ç¢ºç‡
 set.seed(3)
 tune.out=tune(svm,class~.,data=AvaData, kernel="linear",ranges=list(cost=Costlist) )
 summary(tune.out)
-#·Ç½T²v³Ì°ªªÌ¬°³Ì¨Î¼Ò«¬
+#æº–ç¢ºç‡æœ€é«˜è€…ç‚ºæœ€ä½³æ¨¡å‹
 bestmod=tune.out$best.model
 summary(bestmod)
-#±Ntesting dataªºX±a¤Jfinal model¡A±o¨ìY¹w´ú­È¨Ã­pºâaccuracy
+#å°‡testing dataçš„Xå¸¶å…¥final modelï¼Œå¾—åˆ°Yé æ¸¬å€¼ä¸¦è¨ˆç®—accuracy
 PredY=predict(bestmod, newdata=TestData[,-17],type="response")
 confusionMatrix(PredY, TestData$class, positive='Positive' )
-#µeROC curve & ­pºâAUC
+#ç•«ROC curve & è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class),as.numeric(PredY),print.auc=TRUE)
 
 
 ##Neural Network----
-#Available set·í¤¤ªº80%¡A·ítraining set¡A³Ñ¤Uªº20%¬°validation set
+#Available setç•¶ä¸­çš„80%ï¼Œç•¶training setï¼Œå‰©ä¸‹çš„20%ç‚ºvalidation set
 GN.train=round(table(AvaData$class)*0.8,0)
 set.seed(5)
 Trainget=strata(AvaData,"class",size=c(GN.train[[1]],GN.train[[2]]),method="srswr")
@@ -240,15 +240,15 @@ TrainData=AvaData[TrainInx,]
 ValInx=c(1:nrow(AvaData))[-TrainInx]
 ValData=AvaData[ValInx,]
 
-#­ì¥»¥i¥Ñtraining set«Øºcneural network model
-#¨Ã¥Ñvalidation set¥N¤J«Øºcªº¼Ò«¬­pºâ·Ç½T²v¡A§ä³Ì¾Aªº¶W°Ñ¼Æ
+#åŸæœ¬å¯ç”±training setå»ºæ§‹neural network model
+#ä¸¦ç”±validation setä»£å…¥å»ºæ§‹çš„æ¨¡å‹è¨ˆç®—æº–ç¢ºç‡ï¼Œæ‰¾æœ€é©çš„è¶…åƒæ•¸
 NNfit=nnet(class~., data=AvaData, size=50, range=0.7)
 summary(NNfit)
-NNfit$wts ##©Ò¦³weightªº«Y¼Æ¦ô­p­È
-#±Ntesting dataªºX±a¤Jfinal model¡A±o¨ìY¹w´ú­È¨Ã­pºâaccuracy
+NNfit$wts ##æ‰€æœ‰weightçš„ä¿‚æ•¸ä¼°è¨ˆå€¼
+#å°‡testing dataçš„Xå¸¶å…¥final modelï¼Œå¾—åˆ°Yé æ¸¬å€¼ä¸¦è¨ˆç®—accuracy
 PredY=predict(NNfit,newdata=TestData[,-17],type="class")
 confusionMatrix(as.factor(PredY), TestData$class, positive='Positive' )
-#µeROC curve & ­pºâAUC
+#ç•«ROC curve & è¨ˆç®—AUC
 win.graph()
 plot.roc(as.numeric(TestData$class), as.numeric(as.factor(PredY)), print.auc=TRUE)
 
